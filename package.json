@@ -1,0 +1,7 @@
+{
+  "name": "observer",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-uglify": "^2.0.0"
+  }
+}
