@@ -25,10 +25,10 @@
 "use strict";
 (function(global, undefined) {
 
+    var ID = Math.random().toString(36).slice(2);
+
     global.RETURNED_FROM_OBSERVED = Math.random();
     global.PRIMITIVE = Math.random();
-
-    var returnedFromObserved;
 
     function _isArray(object) {
         if (Array.isArray)
@@ -37,10 +37,11 @@
         return typeof object !== 'undefined' && object && object.constructor === Array;
     }
 
-    function _retrieveParams(confParams) {
+    function _retrieveParams(confParams, returnedFromObserved) {
 
-        if (!confParams)
+        if (!confParams) {
             return undefined;
+        }
 
         var params = [];
 
@@ -57,7 +58,7 @@
         return params;
     }
 
-    function _checkConditions(conditionsTree) {
+    function _checkConditions(conditionsTree, returnedFromObserved) {
 
         if (!conditionsTree) { // if no condition is specified the observer function will be fired
             return true;
@@ -148,12 +149,12 @@
             return undefined;
         }
         if (_isArray(confConditions)) {
-            return menageArray(confConditions);
+            return manageArray(confConditions);
         } else {
             return createLeaf(confConditions);
         }
 
-        function menageArray(arrayConditions) {
+        function manageArray(arrayConditions) {
 
             if (arrayConditions[0] != "OR" && arrayConditions[0] != "AND" && arrayConditions[0] != "NOT") {
                 throw new Error("Observer | Unknown operator: '"+ arrayConditions[0] +"'");
@@ -173,7 +174,7 @@
 
             arrayConditions.slice(1).forEach(function(condition) {
                 if (_isArray(condition)) {
-                    node.sons.push(menageArray(condition));
+                    node.sons.push(manageArray(condition));
                 } else {
                     node.sons.push(createLeaf(condition));
                 }
@@ -204,6 +205,12 @@
 
     function addObserver(observer) {
 
+        if (observer instanceof Function) {
+            observer = {
+                fn: observer
+            }
+        }
+
         this.subscribers.push({
             fn: observer.fn,
             conditions: _createConditionsTree(observer.conditions),
@@ -215,7 +222,7 @@
 
     function removeObserver(f) {
 
-        for (var i=this.subscribers.length-1; i>=0;  i--) {
+        for (var i = this.subscribers.length-1; i>=0;  i--) {
             if (this.subscribers[i].fn == f) {
                 this.subscribers.splice(i,1);
             }
@@ -236,11 +243,45 @@
         var fn = this;
 
         var f = function() {
-            returnedFromObserved = fn.apply(this, arguments);
+
+            var args = Array.prototype.slice.call(arguments);
+            var lastArg = args.slice(-1)[0];
+
+            if (lastArg && lastArg.ID == ID) {
+                if (f.state == ID + lastArg.state) {
+                    return;
+                } else {
+                    args.splice(-1, 1);
+                }
+            }
+            if (!lastArg) {
+                lastArg = {
+                    ID: ID,
+                    state: Math.random().toString(36).slice(2)
+                }
+            }
+
+            f.state = ID + lastArg.state;
+
+            var returnedFromObserved = fn.apply(this, args);
 
             f.subscribers.forEach(function(subscriber) {
-                if (_checkConditions(subscriber.conditions)) {
-                    subscriber.fn.apply(null, _retrieveParams(subscriber.params));
+
+                if (subscriber.fn.state == f.state) {
+                    return;
+                }
+
+                if (_checkConditions(subscriber.conditions, returnedFromObserved)) {
+
+                    var args = _retrieveParams(subscriber.params, returnedFromObserved);
+                    if (subscriber.fn.subscribers && subscriber.fn.addObserver && subscriber.fn.removeObserver && subscriber.fn.removeAllObservers) { // duck typing check
+                        args = args || [];
+                        args.push(lastArg);
+                    } else {
+                        subscriber.fn.state = ID + lastArg.state;
+                    }
+                    
+                    subscriber.fn.apply(null, args);
                 }
             });
 
