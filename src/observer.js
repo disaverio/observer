@@ -27,8 +27,8 @@
 
     var ID = Math.random().toString(36).slice(2);
 
-    global.RETURNED_FROM_OBSERVED = Math.random();
-    global.PRIMITIVE = Math.random();
+    global.OBS_OBSERVED_RETURNED = Math.random();
+    global.OBS_PRIMITIVE = Math.random();
 
     function _isArray(object) {
         if (Array.isArray)
@@ -48,7 +48,7 @@
         for (var i = 0; i < confParams.length; i++) {
             if (confParams[i].constructor === Function) {
                 params.push(confParams[i]());
-            } else if (confParams[i] == global.RETURNED_FROM_OBSERVED) {
+            } else if (confParams[i] == global.OBS_OBSERVED_RETURNED) {
                 params.push(returnedFromObserved);
             } else {
                 params.push(confParams[i]);
@@ -69,45 +69,45 @@
         } else {
             if (conditionsTree.operator == "AND") {
                 for (var i = 0; i < conditionsTree.sons.length; i++) {
-                    var checkResult = _checkConditions(conditionsTree.sons[i]);
+                    var checkResult = _checkConditions(conditionsTree.sons[i], returnedFromObserved);
                     if (!checkResult)
                         return false;
                 }
                 return true;
             } else if (conditionsTree.operator == "OR") {
                 for (var i = 0; i < conditionsTree.sons.length; i++) {
-                    var checkResult = _checkConditions(conditionsTree.sons[i]);
+                    var checkResult = _checkConditions(conditionsTree.sons[i], returnedFromObserved);
                     if (checkResult)
                         return true;
                 }
                 return false;
             } else if (conditionsTree.operator == "NOT") {
-                return (!_checkConditions(conditionsTree.sons[0]));
+                return (!_checkConditions(conditionsTree.sons[0], returnedFromObserved));
             }
         }
 
 
         function checkSingleCondition(condition) {
 
-            if (condition.firstParam == global.RETURNED_FROM_OBSERVED) {
+            if (condition.firstParam == global.OBS_OBSERVED_RETURNED) {
                 var firstParam = returnedFromObserved;
             } else if (condition.firstParam.constructor === Function) {
                 var firstParam = condition.firstParam();
-            } else if (condition.firstType == PRIMITIVE) {
+            } else if (condition.firstType == OBS_PRIMITIVE) {
                 var firstParam = condition.firstParam;
             } else {
-                var firstParam = getValue(global, condition.firstParam.split('.'));
+                var firstParam = getValue(condition.firstScope, condition.firstParam.split('.'));
             }
 
-            if (condition.secondParam != undefined) {
-                if (condition.secondParam == global.RETURNED_FROM_OBSERVED) {
+            if (condition.secondParam || condition.secondType) {
+                if (condition.secondParam == global.OBS_OBSERVED_RETURNED) {
                     var secondParam = returnedFromObserved;
                 } else if (condition.secondParam.constructor === Function) {
                     var secondParam = condition.secondParam();
-                } else if (condition.secondType == PRIMITIVE) {
+                } else if (condition.secondType == OBS_PRIMITIVE) {
                     var secondParam = condition.secondParam;
                 } else {
-                    var secondParam = getValue(global, condition.secondParam.split('.'));
+                    var secondParam = getValue(condition.secondScope, condition.secondParam.split('.'));
                 }
             } else {
                 return (firstParam ? true : false);
@@ -135,10 +135,15 @@
             }
 
             function getValue(obj, path) {
-                if (path.length > 1)
+                if (path.length > 1) {
                     return getValue(obj[path[0]], path.slice(1));
-                else
-                    return obj[path[0]];
+                } else {
+                    if (obj[path[0]] === Function) {
+                        return obj[path[0]]();
+                    } else {
+                        return obj[path[0]];
+                    }
+                }
             }
         }
     }
@@ -195,26 +200,23 @@
             return {
                 type: "CONDITION",
                 firstParam: objCondition.firstParam,
-                firstType: objCondition.firstType || global,
+                firstType: objCondition.firstType,
+                firstScope: objCondition.firstScope || global,
                 operator: objCondition.operator || "==",
                 secondParam: objCondition.secondParam,
-                secondType: objCondition.secondType || global
+                secondType: objCondition.secondType,
+                secondScope: objCondition.secondScope || global,
             };
         }
     }
 
     function addObserver(observer) {
 
-        if (observer instanceof Function) {
-            observer = {
-                fn: observer
-            }
-        }
-
         this.subscribers.push({
-            fn: observer.fn,
-            conditions: _createConditionsTree(observer.conditions),
-            params: observer.params
+            fn:         observer.constructor === Function ? observer  : observer.fn,
+            conditions: observer.constructor === Function ? undefined : _createConditionsTree(observer.conditions),
+            params:     observer.constructor === Function ? undefined : observer.params,
+            context:    observer.constructor === Function ? undefined : observer.context
         });
 
         return this;
@@ -244,48 +246,50 @@
 
         var f = function() {
 
+            var stateAttribute = 'state_' + ID;
+
             var args = Array.prototype.slice.call(arguments);
             var lastArg = args.slice(-1)[0];
 
             if (lastArg && lastArg.ID == ID) {
-                if (f.state == ID + lastArg.state) {
+
+                if (f[stateAttribute] == lastArg.state) {
                     return;
-                } else {
-                    args.splice(-1, 1);
                 }
-            }
-            if (!lastArg) {
+                args.splice(-1, 1);
+
+            } else {
                 lastArg = {
                     ID: ID,
                     state: Math.random().toString(36).slice(2)
                 }
             }
 
-            f.state = ID + lastArg.state;
+            f[stateAttribute] = lastArg.state;
 
-            var returnedFromObserved = fn.apply(this, args);
+            var observedVal = fn.apply(this, args);
 
             f.subscribers.forEach(function(subscriber) {
 
-                if (subscriber.fn.state == f.state) {
+                if (subscriber.fn[stateAttribute] == f[stateAttribute]) {
                     return;
                 }
 
-                if (_checkConditions(subscriber.conditions, returnedFromObserved)) {
+                if (_checkConditions(subscriber.conditions, observedVal)) {
 
-                    var args = _retrieveParams(subscriber.params, returnedFromObserved);
+                    var args = _retrieveParams(subscriber.params, observedVal);
                     if (subscriber.fn.subscribers && subscriber.fn.addObserver && subscriber.fn.removeObserver && subscriber.fn.removeAllObservers) { // duck typing check
                         args = args || [];
                         args.push(lastArg);
                     } else {
-                        subscriber.fn.state = ID + lastArg.state;
+                        subscriber.fn[stateAttribute] = lastArg.state;
                     }
                     
-                    subscriber.fn.apply(null, args);
+                    subscriber.fn.apply(subscriber.fn.context, args);
                 }
             });
 
-            return returnedFromObserved;
+            return observedVal;
         };
 
         f.subscribers = [];

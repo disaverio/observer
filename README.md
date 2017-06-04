@@ -46,7 +46,7 @@ That's all!
 
 
 ### Observer execution context
-To bind observer execution to a context you can clearly pass the binded version, like `.addObserver(myObserver.bind(myObj))`.
+To bind observer execution to a context you can clearly pass the binded version: `.addObserver(myObserver.bind(myObj))`.
 
 Otherwise you can set the execution context by a property, passing an object to `addObserver()` with `fn` and `context`.
 ```js
@@ -82,18 +82,19 @@ you have to set two parameters (`firstParam`, `secondParam`) and a comparison op
 
 As parameter you can set:
 - value returned from observed: you have to set parameter to `OBS_OBSERVED_RETURNED`
-- primitive value: you **have to** specify type attribute (`firstType` for `firstParam` or `secondType` for `secondParam`) as `OBS_PRIMITIVE`
-- "*stringed*" reference of a variable (*dot-notation* is supported)
+- primitive value: you have to specify type attribute (`firstType` for `firstParam` or `secondType` for `secondParam`) as `OBS_PRIMITIVE`
+- "*stringed*" reference of a variable (*dot-notation* is supported): if reference is not in global scope you have to specify it with `firstScope` or `secondScope`
 - reference to a function
 
 As operator you can set: `"==="`, `"!=="`, `"=="`, `"!="`, `"<"`, `"<="`, `">"`, `">="`
 
 A condition with only one parameter (`firstParam`) set will be checked by `if (firstParam)`.
 
-Example with value of variable `my.nestedObj.myVar` compared with value returned from `anotherObj.myFun` function:
+Example with value of variable `myObj.nestedObj.myVar` compared with value returned from `anotherObj.myFun` function:
 ```js
 {
-    firstParam: 'my.nestedObj.myVar',
+    firstParam: 'nestedObj.myVar',
+    firstScope: myObj
     operator: '<=',
     secondParam: anotherObj.myFun
 }
