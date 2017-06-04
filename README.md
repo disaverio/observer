@@ -44,10 +44,26 @@ That's all!
 
 `observer.js` supports complex configurations with conditional executions and parameters retrieval for observers. 
 
+
+### Observer execution context
+To bind observer execution to a context you can clearly pass the binded version, like `.addObserver(myfun.bind(context))`.
+
+Otherwise you can set the execution context by a property, passing an object `addObserver()` with `fn` and `context`.
+```js
+myObservedFun.addObserver({
+    fn: myObserver,
+    context: myObj
+})
+```
+The first method is discouraged, especially if same function is used more than one time as observer because it may lead to a fail in state-checking.
+This because `func != func.bind(context)` and, more important `func.bind(context) != func.bind(context)`.
+
+In a cyclic configuration of observers it leads to an infinite loop.
+
 ### Conditional execution
 Observers execution can be conditionated to conditions provided during observer binding.
 
-To provide conditions you have to pass an object to `addObserver()`, with observer function and conditions:
+To define conditions you have to pass an object to `addObserver()`, with observer function and conditions definition:
 ```js
 myObservedFun.addObserver({
     fn: firstObserver,
