@@ -36,9 +36,9 @@
 
         confParams = confParams || [];
         confParams.forEach(function(confParam) {
-            confParam.constructor === Function        ? params.push(confParam())         :
+            confParam.constructor === Function        ? params.push(confParam())          :
             confParam == global.OBS_OBSERVED_RETURNED ? params.push(returnedFromObserved) :
-                                                         params.push(confParam)
+                                                        params.push(confParam)
         });
 
         return params;
