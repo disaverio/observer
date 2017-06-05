@@ -56,7 +56,7 @@ myObservedFun.addObserver({
 })
 ```
 The first method is discouraged, especially if same function is used more than one time as observer because it may lead to a fail in state-checking.
-This because `func != func.bind(context)` and, more important `func.bind(context) != func.bind(context)`.
+This because `func != func.bind(context)` and, more important, `func.bind(context) != func.bind(context)`.
 
 In a cyclic configuration of observers it can lead to an infinite loop.
 
@@ -67,15 +67,30 @@ To define conditions you have to pass an object to `addObserver()`, with observe
 ```js
 myObservedFun.addObserver({
     fn: firstObserver,
-    conditions: {}
+    conditions: {} | Function
 })
 ```
-`conditions` can be set with an object (*single condition*) or an array (*multiple conditions*).
+`conditions` can be set with an object or function (*single condition*) or an array (*multiple conditions*).
 
 ##### Single condition:
-A single condition is an object with at least one parameter `firstParam` to be checked before execution:
+A single condition is defined in two ways:
+
+###### Function
 ```js
-{ firstParam: 'nested.object.paramName' }
+myObservedFun.addObserver({
+    fn: firstObserver,
+    conditions: myFun
+})
+```
+Value returned from execution is checked. The example corresponds to `if (myFun())`
+
+###### Object
+with at least one parameter `firstParam` to be checked before execution:
+```js
+myObservedFun.addObserver({
+    fn: firstObserver,
+    conditions: { firstParam: 'nested.object.paramName' }
+})
 ```
 In general you can define a condition as a comparison of two parameters:
 you have to set two parameters (`firstParam`, `secondParam`) and a comparison operator (`operator`).
@@ -86,13 +101,15 @@ As parameter you can set:
 - "*stringed*" reference of a variable (*dot-notation* is supported): if reference is not in global scope you have to specify it with `firstScope` or `secondScope`
 - reference to a function
 
-As operator you can set: `"==="`, `"!=="`, `"=="`, `"!="`, `"<"`, `"<="`, `">"`, `">="`
+As operator you can optionally set: `"==="`, `"!=="`, `"=="`, `"!="`, `"<"`, `"<="`, `">"`, `">="`. Default value: `"=="`.
 
-A condition with only one parameter (`firstParam`) set will be checked by `if (firstParam)`.
+A condition with only one parameter (`firstParam`) will be checked by `if (firstParam)`.
+
+All possible properties of condition object: `firstParam`, `secondParam`, `operator`, `firstType`, `secondType`, `firstScope`, `secondScope`
 
 Example with value of variable `myObj.nestedObj.myVar` compared with value returned from `anotherObj.myFun` function:
 ```js
-{
+conditions: {
     firstParam: 'nestedObj.myVar',
     firstScope: myObj
     operator: '<=',
@@ -102,7 +119,7 @@ Example with value of variable `myObj.nestedObj.myVar` compared with value retur
 
 Example with value returned from observed function compared with `null` (primitive value):
 ```js
-{
+conditions: {
     firstParam: OBS_OBSERVED_RETURNED,
     operator: '===',
     secondParam: null,
@@ -118,6 +135,32 @@ Subsequent elements can be single conditions or array itself (recursive).
 
 Example condition: `(A && B && (C || !D || E))` will be:
 
-`["AND", A, B, ["OR", C, ["NOT", D], E]]`
+```js
+conditions:  ["AND", A, B, ["OR", C, ["NOT", D], E]]
+```
 
 where `A`, ..., `E` are single condition objects defined like above.
+
+### Parameters retrieval
+It is possible to pass parameters to observers at execution time.
+
+To define parameters you have to pass an object to `addObserver()`, with observer function and parameters definition:
+```js
+myObservedFun.addObserver({
+    fn: firstObserver,
+    params: []
+})
+```
+`params` (optional) is an array with elements that will be passed to function.
+
+Three types of objects in array:
+
+- Function, executed to retrieve params
+- Primitive values
+- `OBS_OBSERVED_RETURNED` to pass value returned from observer
+
+Example:
+```js
+params: [ getterFun, Math.PI, "name", OBS_OBSERVED_RETURNED, 42]
+```
+corresponds to: `observer(getterFun(), MathPi, "name", ret, 42)` where `ret = observed()`

@@ -190,6 +190,10 @@
 
         function createLeaf(objCondition) {
 
+            if (objCondition.constructor === Function) {
+                objCondition = { firstParam: objCondition }
+            }
+
             if (!objCondition || !objCondition.firstParam) {
                 throw new Error("Observer | Invalid condition: "+ objCondition.operator);
             }
