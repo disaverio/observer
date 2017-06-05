@@ -82,7 +82,7 @@ myObservedFun.addObserver({
     conditions: myFun
 })
 ```
-Value returned from execution is checked. The example corresponds to `if (myFun())`
+Value returned from execution is checked. The example corresponds to `if (myFun())`.
 
 ###### Object
 with at least one parameter `firstParam` to be checked before execution:
@@ -131,7 +131,7 @@ conditions: {
 Boolean expressions to compare multiple single conditions is supported.
 
 To use boolean operators you have to set `conditions` as array, where first element **is** one of `"AND"`, `"OR"`, `"NOT"`.
-Subsequent elements can be single conditions or array itself (recursive).
+Subsequent elements can be single conditions or array itself (recursive). If operator is `"NOT"`, in the array can be only another element, the condition.
 
 Example condition: `(A && B && (C || !D || E))` will be:
 
