@@ -207,7 +207,7 @@ d(); // -> c(), b(), e(), g(), f()
 f(); // -> e(), g()
 ```
 
-In case of more observers on an observed, their execution occurss in order in which they were added.
+In case of more observers on an observed, their execution occurs in order in which they were added.
  
 ## Note
 `observer.js` save two variables in global scope: `OBS_OBSERVED_RETURNED` and `OBS_PRIMITIVE`
