@@ -49,7 +49,7 @@
         // if no condition is specified the observer function will be fired
         if (!conditionsTree) return true;
 
-        if (conditionsTree.type == 'CONDITION') {
+        if (conditionsTree.type == 1) {
             return checkSingleCondition(conditionsTree);
         } else {
             if (conditionsTree.operator == 'AND') {
@@ -122,7 +122,7 @@
             if ((arrayConditions[0] == 'OR' || arrayConditions[0] == 'AND') && arrayConditions.length <= 2) throw new Error("Observer | '" + arrayConditions[0] + "' operator must have at least two arguments.");
 
             var node = {
-                type:     'OPERATOR',
+                type:     0, // operator
                 operator: arrayConditions[0],
                 sons:     []
             };
@@ -143,7 +143,7 @@
             if (objCondition.operator && objCondition.operator != "===" && objCondition.operator != "!==" && objCondition.operator != "==" && objCondition.operator != "!=" && objCondition.operator != ">" && objCondition.operator != ">=" && objCondition.operator != "<" && objCondition.operator != "<=") throw new Error("Observer | Unknown operator: '"+ objCondition.operator +"'");
 
             return {
-                type:        'CONDITION',
+                type:        1, // condition
                 firstParam:  objCondition.firstParam,
                 firstType:   objCondition.firstType,
                 firstScope:  objCondition.firstScope || global,
