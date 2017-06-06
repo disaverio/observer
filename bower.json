@@ -10,7 +10,7 @@
       "homepage": "http://andreads.it" }
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/disaverio/observer.git",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -27,5 +27,8 @@
     "node"
   ],
   "dependencies": {},
-  "repository": {}
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/disaverio/observer.git"
+  }
 }

@@ -4,13 +4,22 @@ It allows transparent interaction between modules without the need to modify mod
 
 It tracks an execution state of observers to avoid infinite loop on cyclic configurations.
 
-## How to use
+## Installation
 
-All you have to do is import the lib in the project:
- ```js
+Import lib w ith [Bower package manager](https://bower.io/):
+```sh
+bower install observer-js
+```
+or by download `dist/observer.min.js` and import in project with direct include
+
+```html
 <script src='observer.min.js'></script>
 ```
-and declare a function as observable:
+or with a module loader.
+
+## How to use
+
+All you have to do is declare a function as observable:
 ```js
 var myObservedFun = (function() {}).observable();
 ```
