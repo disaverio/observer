@@ -6,7 +6,7 @@ It tracks an execution state of observers to avoid infinite loop on cyclic confi
 
 ## Installation
 
-Import lib w ith [Bower package manager](https://bower.io/):
+Import lib with [Bower package manager](https://bower.io/):
 ```sh
 bower install observer-js
 ```
