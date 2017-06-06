@@ -164,3 +164,41 @@ Example:
 params: [ getterFun, Math.PI, "name", OBS_OBSERVED_RETURNED, 42]
 ```
 corresponds to: `observer(getterFun(), MathPi, "name", ret, 42)` where `ret = observed()`
+
+## Cyclic configuration
+
+Since observers can be in their turn observed it is possible to have a cyclic-graph configuration.
+In this case loop is avoided by a mechanism of state-checking and observers execution is triggered via a dfs exploration of graph.
+
+Configuration example:
+```js
+var a = (function() { }).observable();
+var b = (function() { }).observable();
+var c = (function() { }).observable();
+var d = (function() { }).observable();
+var e = (function() { }).observable();
+var f = (function() { }).observable();
+var g = (function() { }).observable();
+
+a.addObserver(b).addObserver(c);
+b.addObserver(d).addObserver(e);
+c.addObserver(b);
+d.addObserver(c);
+e.addObserver(g).addObserver(f);
+f.addObserver(e);
+```
+above configuration corresponds to:
+
+![Depth map](img/cg.png)
+
+In this case execution flows are:
+```js
+a(); // -> b(), d(), c(), e(), g(), f()
+d(); // -> c(), b(), e(), g(), f()
+f(); // -> e(), g()
+```
+
+In case of more observers on an observed, their execution occurss in order in which they were added.
+ 
+## Note
+`observer.js` save two variables in global scope: `OBS_OBSERVED_RETURNED` and `OBS_PRIMITIVE`
