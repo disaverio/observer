@@ -210,5 +210,5 @@ f(); // -> e(), g()
 In case of more observers on an observed, their execution occurs in order in which they were added.
  
 ## Note
-1. `observer.js` save two variables in global scope: `OBS_OBSERVED_RETURNED` and `OBS_PRIMITIVE`
+1. `observer.js` saves two variables in global scope: `OBS_OBSERVED_RETURNED` and `OBS_PRIMITIVE`
 2. `myFun != myFun.observable()`
