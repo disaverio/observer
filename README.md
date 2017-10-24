@@ -47,7 +47,7 @@ myObservedFun.removeAllObservers();
 
 That's all!
 
-`observer.js` supports more complex situations: for an advance use check next sections.
+`observer.js` supports more complex situations: read next sections.
 
 ## Options
 
@@ -172,7 +172,7 @@ Example:
 ```js
 params: [ getterFun, Math.PI, "name", OBS_OBSERVED_RETURNED, 42]
 ```
-corresponds to: `observer(getterFun(), MathPi, "name", ret, 42)` where `ret = observed()`
+corresponds to: `observer(getterFun(), Math.PI, "name", ret, 42)` where `ret = observed()`
 
 ## Cyclic configuration
 
